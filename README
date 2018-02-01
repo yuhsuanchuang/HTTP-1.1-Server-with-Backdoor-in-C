@@ -1,0 +1,10 @@
+Description: 
+Here I use c work on Ubuntu 14.04 64-bit to implement this assignment.
+This program is a HTTP 1.1 sever that support valid HTTP 1.1 requests from HTTP clients. If server receives a GET request for a URL in the form of /exec/<command>, then my server would take <command> and execute it using the “system” and send the result of the stdout of the executed command back to clients.
+
+Requirements:
+Requires to be worked on Ubuntu 14.04 64-bit
+
+Interface:
+Must implement the following command-line interface:
+./normal_web_server <port>
