@@ -12,15 +12,16 @@
 #include <sys/wait.h>
 #include <stdlib.h>
 #define ISspace(x) isspace((int)(x))
-//char *buf;///////dynamic
 int server_sock = -1;
+
+/**********************************************************************/
+//receive message from client 
 /**********************************************************************/
 int get_line(int sock, char *buf)
 {
   int i = 0;
   char c = '\0';
   int n;
-  //buf = (char*)malloc((i+1)*sizeof(char));
   while (c != '\n')
   {
     n = recv(sock, &c, 1, 0);
@@ -34,7 +35,6 @@ int get_line(int sock, char *buf)
         else
           c = '\n';
       }
-      //buf = (char*)realloc(buf, (i+1)*sizeof(char));
       buf[i] = c;
       i++;
     }
@@ -46,6 +46,7 @@ int get_line(int sock, char *buf)
   return(i);
 }
 /**********************************************************************/
+//send http 404
 /**********************************************************************/
 void not_found(int client)
 {
@@ -54,65 +55,21 @@ void not_found(int client)
 
   sprintf(buff, "HTTP/1.1 404 NOT FOUND\r\n");
   send(client, buff, strlen(buff), 0);
-  // sprintf(buf, "cache-control: no-cache\r\n");
-  // send(client, buff, strlen(buff), 0);
+  
   sprintf(buff, "\r\n");
   send(client, buff, strlen(buff), 0);
 }
 /**********************************************************************/
+//execute command
 /**********************************************************************/
 void serve_exec(int client, char *command)
 {
-	// //headers(client, command);
-	// int numchars = 1;
-	// FILE *in;
- //  extern FILE *popen();
-	// char buff[512];
-	// int c = system(command);
-	// if( c == 0 ){
-	// 	if(!(in = popen(command, "r"))){
-	// 		while ((numchars > 0) && strcmp("\n", buf))  /* read & discard headers */
-	//   			numchars = get_line(client);
-	//   		not_found(client);
-	// 	}
-	// 	else{
-	// 		strcpy(buff, "HTTP/1.1 200 OK\r\n");//f
-	// 		send(client, buff, strlen(buff), 0);
-
-	// 		sprintf(buf, "cache-control: no-cache\r\n");
- // 			send(client, buff, strlen(buff), 0);
-
-	// 		// sprintf(buff, "Connection: Keep-Alive\r\n");
-	// 		// send(client, buff, strlen(buff), 0);
-
-	// 		// sprintf(buff, "Keep-Alive: timeout=60, max=100\r\n");
-	// 		// send(client, buff, strlen(buff), 0);
-			
-	// 	 	strcpy(buff, "\r\n");
-	// 	  send(client, buff, strlen(buff), 0);
-
-	// 		while(fgets(buff, sizeof(buff), in)!=NULL){
-	//     	printf("%s", buff);
-	//     	send(client, buff, strlen(buff), 0);
-	// 		}
-	// 		sprintf(buff, "\r\n");
-	// 	 	send(client, buff, strlen(buff), 0);
-	// 	}
- //    pclose(in);
-	// }
-	// else
-	// {
-	// 	while ((numchars > 0) && strcmp("\n", buf))  /* read & discard headers */
-	//   		numchars = get_line(client);
-	//   not_found(client);
-	// }
 	
 	FILE *resource = NULL;
  	int numchars = 1;
  	char buff[1024];
  	int c;
   
-  ////remove("output.txt");
  	c = system(command);
  	printf("%d\n", c);
  	if(c == 0)
@@ -123,17 +80,10 @@ void serve_exec(int client, char *command)
 
 		strcpy(buff, "HTTP/1.1 200 OK\r\n");//f
 		send(client, buff, strlen(buff), 0);
-    // sprintf(buff, "Content-Type: text/html\r\n");
-    // send(client, buff, strlen(buff), 0);
-    // sprintf(buff, "Content-Length: 100\r\n");
-    // send(client, buff, strlen(buff), 0);
+   
     sprintf(buff, "\r\n");
     send(client, buff, strlen(buff), 0);
-    // sprintf(buff, "<HTML><TITLE>OK</TITLE>\r\n");
-    // send(client, buff, strlen(buff), 0);
-    // sprintf(buff, "<BODY>\r\n");
-    // send(client, buff, strlen(buff), 0);
-
+   
 	 	if (resource == NULL)
     {
 	 		not_found(client);
@@ -148,11 +98,8 @@ void serve_exec(int client, char *command)
 		    fgets(buff, sizeof(buff), resource);
 		  }
 	 	}
-    // sprintf(buff, "</BODY></HTML>\r\n");
-    // send(client, buff, strlen(buff), 0);
-	
+   
 	 	fclose(resource);
-    //remove("output.txt");
  	}
  	else
  	{
@@ -161,8 +108,9 @@ void serve_exec(int client, char *command)
 }
 
 /**********************************************************************/
-
-void *accept_request(void *client_sock)/*client = client_sock from main*/
+// get url and parse it
+/**********************************************************************/
+void *accept_request(void *client_sock)
 {
   printf("pthread create\n");
   char buf[1024];
@@ -170,13 +118,12 @@ void *accept_request(void *client_sock)/*client = client_sock from main*/
   int client = *client_s;
   int numchars=1;
   char method[255];
-  char url[1024];///////dynamic
+  char url[1024];
   char path[512];
-  char command[1024];///////dynamic
+  char command[1024];
   size_t i, j;
 
   numchars = get_line(client, buf);
-  //printf("numchars = %d\n", numchars);
   
   if(numchars > 0)
   {
@@ -190,17 +137,14 @@ void *accept_request(void *client_sock)/*client = client_sock from main*/
     printf("method = %s\n", method);
 
     i = 0;
-    //url = (char*)malloc((i+1)*sizeof(char));
-    //url[i] = '\0';
+
     while (ISspace(buf[j]) && (j < strlen(buf)))
       j++;
     while (!ISspace(buf[j]) && (j < strlen(buf)))
     {
-      //url = (char*)realloc(url, (i+1)*sizeof(char));
       url[i] = buf[j];
       i++; j++;
     }
-    //url = (char*)realloc(url, (i+1)*sizeof(char));
     url[i] = '\0';
     printf("url = %s\n", url);
 
@@ -218,18 +162,14 @@ void *accept_request(void *client_sock)/*client = client_sock from main*/
       printf("path = %s\n", path);
 
       i = 0;
-      //command = (char*)malloc((i+1)*sizeof(char));
-      //command[0] = '\0';
       if(url[j] == '/') /////command
       {
         j++;
         while(url[j] != '\0')
         {
-          //command = (char*)realloc(command, (i+1)*sizeof(char));
           command[i] = url[j];
           i++; j++;
         }
-        //command = (char*)realloc(command, (i+1)*sizeof(char));
         command[i] = '\0';
       }
       
@@ -258,54 +198,48 @@ void *accept_request(void *client_sock)/*client = client_sock from main*/
       if(strcasecmp(path, "exec") != 0 || command[0] == '\0')
       {
         numchars=1;
-        // while ((numchars > 0) && strcmp("\n", buf))   read & discard headers 
-        //   numchars = get_line(client, buf);
         not_found(client);
-        ////404~~~
+        ////404
       }
       else
       {
         numchars=1;
-        // while ((numchars > 0) && strcmp("\n", buf))   read & discard headers 
-        //   numchars = get_line(client, buf);
         serve_exec(client, command);
       }
     }
     else
     {
       numchars=1;
-      // while ((numchars > 0) && strcmp("\n", buf))   read & discard headers 
-      //   numchars = get_line(client, buf);
       not_found(client);
-        ////404~~~
+        ////404
     }
   }
   else
   {
     numchars=1;
-    // while ((numchars > 0) && strcmp("\n", buf))   read & discard headers 
-    //   numchars = get_line(client, buf);
     not_found(client);
-      ////404~~~
+      ////404
   }
   close(client);
   pthread_exit(NULL);
 }
+
 /**********************************************************************/
+// show error
+/**********************************************************************/
+
 void error_die(const char *sc)
 {
   perror(sc);
   exit(1);
 }
 
-/**********************************************************************/
-
 int startup(u_short *port)
 {
   int httpd = 0;
   struct sockaddr_in name;
 
-  httpd = socket(PF_INET, SOCK_STREAM, 0);//PF=Protocol Family
+  httpd = socket(PF_INET, SOCK_STREAM, 0);
   if (httpd == -1)
     error_die("socket");
 
@@ -336,7 +270,6 @@ int startup(u_short *port)
 
 int main(int argc, char *argv[])
 {
-  
   u_short port = 8888;
   port =  atoi(argv[1]);
   int client_sock = -1;
