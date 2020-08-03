@@ -220,6 +220,8 @@ void *accept_request(void *client_sock)
     not_found(client);
       ////404
   }
+  printf("close!!\n");
+  shutdown(client, 0); // close recieve
   close(client);
   pthread_exit(NULL);
 }
